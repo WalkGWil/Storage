@@ -224,6 +224,7 @@ function App() {
             <ErrorBoundary>
               <div style={{ border: '1px solid #ddd', borderRadius: '5px', overflow: 'hidden' }}>
                 <StorageBrowser 
+                  path=""
                   displayText={{
                     getListObjectsResultMessage: (items) => {
                       console.log('📊 StorageBrowser items:', items);
