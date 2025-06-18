@@ -1,12 +1,8 @@
 #!/bin/bash
 
-# Get outputs and save to .env file
-aws cloudformation describe-stacks \
-  --stack-name s3-storage-browser-stack \
-  --query 'Stacks[0].Outputs' \
-  --output table
+# Create .env file from existing CloudFormation stack
+echo "Creating .env file from CloudFormation stack..."
 
-echo "Creating .env file..."
 aws cloudformation describe-stacks \
   --stack-name s3-storage-browser-stack \
   --query 'Stacks[0].Outputs[?OutputKey==`UserPoolId`].OutputValue' \
@@ -33,3 +29,4 @@ aws cloudformation describe-stacks \
   --output text | sed 's/^/REACT_APP_AWS_REGION=/' >> .env
 
 echo ".env file created successfully!"
+cat .env

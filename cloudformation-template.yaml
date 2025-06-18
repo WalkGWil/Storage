@@ -56,8 +56,8 @@ Resources:
                   - s3:DeleteObject
                   - s3:ListBucket
                 Resource:
-                  - !Sub '${StorageBucket}/*'
-                  - !Ref StorageBucket
+                  - !Sub '${StorageBucket.Arn}/*'
+                  - !GetAtt StorageBucket.Arn
 
   # Identity Pool Role Attachment
   IdentityPoolRoleAttachment:
