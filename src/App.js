@@ -3,13 +3,25 @@ import { Authenticator } from '@aws-amplify/ui-react';
 import { StorageBrowser } from '@aws-amplify/ui-react-storage';
 import '@aws-amplify/ui-react/styles.css';
 
+// Debug environment variables
+console.log('Environment Variables:', {
+  userPoolId: process.env.REACT_APP_USER_POOL_ID,
+  userPoolClientId: process.env.REACT_APP_USER_POOL_CLIENT_ID,
+  identityPoolId: process.env.REACT_APP_IDENTITY_POOL_ID,
+  bucketName: process.env.REACT_APP_BUCKET_NAME,
+  region: process.env.REACT_APP_AWS_REGION
+});
+
 // Replace these with CloudFormation outputs
 Amplify.configure({
   Auth: {
     Cognito: {
       userPoolId: process.env.REACT_APP_USER_POOL_ID || 'YOUR_USER_POOL_ID',
       userPoolClientId: process.env.REACT_APP_USER_POOL_CLIENT_ID || 'YOUR_USER_POOL_CLIENT_ID',
-      identityPoolId: process.env.REACT_APP_IDENTITY_POOL_ID || 'YOUR_IDENTITY_POOL_ID'
+      identityPoolId: process.env.REACT_APP_IDENTITY_POOL_ID || 'YOUR_IDENTITY_POOL_ID',
+      loginWith: {
+        username: true
+      }
     }
   },
   Storage: {
@@ -18,12 +30,6 @@ Amplify.configure({
       region: 'us-west-2'
     }
   }
-});
-
-// Configure AWS region globally
-Amplify.configure({
-  ...Amplify.getConfig(),
-  aws_project_region: 'us-west-2'
 });
 
 function App() {
