@@ -78,32 +78,7 @@ Resources:
             AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
             AllowedOrigins: ['*']
 
-  # Amplify App
-  AmplifyApp:
-    Type: AWS::Amplify::App
-    Properties:
-      Name: !Ref AppName
-      Repository: 'https://github.com/YOUR_USERNAME/YOUR_REPO'
-      BuildSpec: |
-        version: 1
-        frontend:
-          phases:
-            preBuild:
-              commands:
-                - npm install
-            build:
-              commands:
-                - npm run build
-          artifacts:
-            baseDirectory: build
-            files:
-              - '**/*'
 
-  AmplifyBranch:
-    Type: AWS::Amplify::Branch
-    Properties:
-      AppId: !GetAtt AmplifyApp.AppId
-      BranchName: main
 
 Outputs:
   UserPoolId:
@@ -114,5 +89,5 @@ Outputs:
     Value: !Ref IdentityPool
   BucketName:
     Value: !Ref StorageBucket
-  AmplifyAppUrl:
-    Value: !Sub 'https://main.${AmplifyApp.DefaultDomain}'
+  Region:
+    Value: !Ref AWS::Region
