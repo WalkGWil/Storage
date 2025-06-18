@@ -23,10 +23,7 @@ aws cloudformation describe-stacks \
   --query 'Stacks[0].Outputs[?OutputKey==`BucketName`].OutputValue' \
   --output text | sed 's/^/REACT_APP_BUCKET_NAME=/' >> .env
 
-aws cloudformation describe-stacks \
-  --stack-name s3-storage-browser-stack \
-  --query 'Stacks[0].Outputs[?OutputKey==`Region`].OutputValue' \
-  --output text | sed 's/^/REACT_APP_AWS_REGION=/' >> .env
+echo "REACT_APP_AWS_REGION=us-west-2" >> .env
 
 echo ".env file created successfully!"
 cat .env

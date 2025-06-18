@@ -15,9 +15,15 @@ Amplify.configure({
   Storage: {
     S3: {
       bucket: process.env.REACT_APP_BUCKET_NAME || 'YOUR_BUCKET_NAME',
-      region: process.env.REACT_APP_AWS_REGION || 'us-east-1'
+      region: 'us-west-2'
     }
   }
+});
+
+// Configure AWS region globally
+Amplify.configure({
+  ...Amplify.getConfig(),
+  aws_project_region: 'us-west-2'
 });
 
 function App() {
