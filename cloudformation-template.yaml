@@ -46,21 +46,18 @@ Resources:
                   - s3:GetObject
                   - s3:PutObject
                   - s3:DeleteObject
-                Resource: !Sub '${StorageBucket}/public/*'
+                Resource: 
+                  - !Sub '${StorageBucket}/public/*'
+                  - !Sub '${StorageBucket}/private/*'
               - Effect: Allow
                 Action:
                   - s3:GetObject
                   - s3:PutObject
                   - s3:DeleteObject
-                Resource: !Sub '${StorageBucket}/private/${cognito-identity.amazonaws.com:sub}/*'
+                Resource: !Sub '${StorageBucket}/*'
               - Effect: Allow
                 Action: s3:ListBucket
                 Resource: !GetAtt StorageBucket.Arn
-                Condition:
-                  StringLike:
-                    's3:prefix':
-                      - 'public/*'
-                      - 'private/${cognito-identity.amazonaws.com:sub}/*'
 
   IdentityPoolRoleAttachment:
     Type: AWS::Cognito::IdentityPoolRoleAttachment
