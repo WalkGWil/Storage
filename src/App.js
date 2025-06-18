@@ -41,7 +41,11 @@ function App() {
             <h1>S3 Storage Browser</h1>
             <button onClick={signOut}>Sign out</button>
           </div>
-          <StorageBrowser />
+          <StorageBrowser 
+            displayText={{
+              getListObjectsResultMessage: (items) => `${items.length} objects`
+            }}
+          />
         </div>
       )}
     </Authenticator>
