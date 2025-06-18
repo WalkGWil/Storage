@@ -1,53 +1,29 @@
-# S3 Storage Browser App
+# Storage Browser Demo
 
-A minimal React web app with S3 Storage Browser functionality deployed via CloudFormation.
+A minimal demo of AWS Amplify Storage Browser component.
 
-## Quick Deploy
+## Quick Start
 
-1. **Deploy AWS infrastructure:**
+1. **Deploy infrastructure:**
    ```bash
-   ./deploy.sh
-   ```
-   This creates Cognito User Pool, Identity Pool, S3 bucket, and generates `.env` file.
-
-2. **Install dependencies:**
-   ```bash
-   npm install
+   npm run deploy
    ```
 
-3. **Start development server:**
+2. **Start the app:**
    ```bash
    npm start
    ```
 
-## Manual Deploy
+3. **Create a user account** and start uploading/browsing files!
 
-1. **Deploy CloudFormation stack:**
-   ```bash
-   aws cloudformation deploy \
-     --template-file cloudformation-template.yaml \
-     --stack-name s3-storage-browser-stack \
-     --capabilities CAPABILITY_IAM
-   ```
+## What's included
 
-2. **Get configuration values:**
-   ```bash
-   aws cloudformation describe-stacks \
-     --stack-name s3-storage-browser-stack \
-     --query 'Stacks[0].Outputs'
-   ```
+- Cognito authentication
+- S3 bucket with proper CORS
+- Storage Browser with public and private file access
+- Automatic environment configuration
 
-## Infrastructure
+## File Structure
 
-- **Cognito User Pool** - User authentication
-- **Cognito Identity Pool** - AWS credentials for authenticated users  
-- **S3 Bucket** - File storage with CORS configuration
-- **IAM Role** - S3 permissions for authenticated users
-
-## Features
-
-- User authentication with Cognito
-- S3 file browser interface
-- Upload, download, and delete files
-- Folder navigation
-- Environment variable configuration
+- `public/` - Files accessible to all users
+- `private/{user-id}/` - Files private to each user

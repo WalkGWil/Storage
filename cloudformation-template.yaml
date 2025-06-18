@@ -1,36 +1,28 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'S3 Storage Browser Infrastructure'
-
-Parameters:
-  AppName:
-    Type: String
-    Default: 's3-storage-browser'
+Description: 'Simple S3 Storage Browser Demo'
 
 Resources:
-  # Cognito User Pool
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: !Sub '${AppName}-users'
+      UserPoolName: storage-demo-users
       AutoVerifiedAttributes: [email]
 
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref UserPool
-      ClientName: !Sub '${AppName}-client'
+      ClientName: storage-demo-client
 
-  # Identity Pool
   IdentityPool:
     Type: AWS::Cognito::IdentityPool
     Properties:
-      IdentityPoolName: !Sub '${AppName}-identity'
+      IdentityPoolName: storage-demo-identity
       AllowUnauthenticatedIdentities: false
       CognitoIdentityProviders:
         - ClientId: !Ref UserPoolClient
           ProviderName: !GetAtt UserPool.ProviderName
 
-  # IAM Role for authenticated users
   AuthenticatedRole:
     Type: AWS::IAM::Role
     Properties:
@@ -45,7 +37,7 @@ Resources:
               StringEquals:
                 'cognito-identity.amazonaws.com:aud': !Ref IdentityPool
       Policies:
-        - PolicyName: S3Access
+        - PolicyName: S3StorageAccess
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -54,12 +46,22 @@ Resources:
                   - s3:GetObject
                   - s3:PutObject
                   - s3:DeleteObject
-                  - s3:ListBucket
-                Resource:
-                  - !Sub '${StorageBucket.Arn}/*'
-                  - !GetAtt StorageBucket.Arn
+                Resource: !Sub '${StorageBucket}/public/*'
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub '${StorageBucket}/private/${cognito-identity.amazonaws.com:sub}/*'
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt StorageBucket.Arn
+                Condition:
+                  StringLike:
+                    's3:prefix':
+                      - 'public/*'
+                      - 'private/${cognito-identity.amazonaws.com:sub}/*'
 
-  # Identity Pool Role Attachment
   IdentityPoolRoleAttachment:
     Type: AWS::Cognito::IdentityPoolRoleAttachment
     Properties:
@@ -67,18 +69,14 @@ Resources:
       Roles:
         authenticated: !GetAtt AuthenticatedRole.Arn
 
-  # S3 Bucket
   StorageBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub '${AppName}-storage-${AWS::AccountId}'
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders: ['*']
             AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
             AllowedOrigins: ['*']
-
-
 
 Outputs:
   UserPoolId:

@@ -1,5 +1,5 @@
 {
-  "name": "s3-storage-browser",
+  "name": "storage-browser-demo",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
@@ -12,18 +12,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "build": "react-scripts build",
+    "deploy": "aws cloudformation deploy --template-file cloudformation-template.yaml --stack-name storage-browser-demo --capabilities CAPABILITY_IAM && node update-env.js"
   }
 }
