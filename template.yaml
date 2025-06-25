@@ -1,0 +1,159 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for secure document management system with S3'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+    Description: Environment name
+
+Resources:
+  # Main S3 bucket for document storage
+  DocumentBucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub '${AWS::StackName}-documents-${Environment}'
+      VersioningConfiguration:
+        Status: Enabled
+      ObjectLockConfiguration:
+        ObjectLockEnabled: true
+        Rule:
+          DefaultRetention:
+            Mode: GOVERNANCE
+            Years: 100
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: 'aws:kms'
+            KMSMasterKeyID: !Ref DocumentBucketKey
+      ReplicationConfiguration:
+        Role: !GetAtt ReplicationRole.Arn
+        Rules:
+          - Status: Enabled
+            Priority: 1
+            DeleteMarkerReplication:
+              Status: Enabled
+            Destination:
+              Bucket: !GetAtt BackupBucket.Arn
+              EncryptionConfiguration:
+                ReplicaKmsKeyID: !GetAtt BackupBucketKey.Arn
+      LifecycleConfiguration:
+        Rules:
+          - Id: TransitionToIA
+            Status: Enabled
+            Transitions:
+              - StorageClass: STANDARD_IA
+                TransitionInDays: 90
+
+  # Backup bucket in different region
+  BackupBucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub '${AWS::StackName}-backup-${Environment}'
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: 'aws:kms'
+            KMSMasterKeyID: !Ref BackupBucketKey
+
+  # KMS Keys for encryption
+  DocumentBucketKey:
+    Type: 'AWS::KMS::Key'
+    Properties:
+      Description: KMS key for document bucket encryption
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+
+  BackupBucketKey:
+    Type: 'AWS::KMS::Key'
+    Properties:
+      Description: KMS key for backup bucket encryption
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+
+  # IAM Role for replication
+  ReplicationRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: ReplicationPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetReplicationConfiguration'
+                  - 's3:ListBucket'
+                Resource: !GetAtt DocumentBucket.Arn
+              - Effect: Allow
+                Action:
+                  - 's3:GetObjectVersionForReplication'
+                  - 's3:GetObjectVersionAcl'
+                  - 's3:GetObjectVersionTagging'
+                Resource: !Sub '${DocumentBucket.Arn}/*'
+              - Effect: Allow
+                Action:
+                  - 's3:ReplicateObject'
+                  - 's3:ReplicateDelete'
+                  - 's3:ReplicateTags'
+                Resource: !Sub '${BackupBucket.Arn}/*'
+              - Effect: Allow
+                Action:
+                  - 'kms:Decrypt'
+                Resource: !GetAtt DocumentBucketKey.Arn
+              - Effect: Allow
+                Action:
+                  - 'kms:Encrypt'
+                Resource: !GetAtt BackupBucketKey.Arn
+
+Outputs:
+  DocumentBucketName:
+    Description: Name of the main document bucket
+    Value: !Ref DocumentBucket
+  BackupBucketName:
+    Description: Name of the backup bucket
+    Value: !Ref BackupBucket
+  DocumentBucketArn:
+    Description: ARN of the main document bucket
+    Value: !GetAtt DocumentBucket.Arn
+  BackupBucketArn:
+    Description: ARN of the backup bucket
+    Value: !GetAtt BackupBucket.Arn
